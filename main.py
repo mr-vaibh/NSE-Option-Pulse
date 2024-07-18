@@ -8,7 +8,7 @@ from sqlite_dumper import dump_data_to_sqlite, initialize_database
 # Constants
 SYMBOL = 'NIFTY'
 TARGET_STRIKE_PRICES = [24600, 24700, 24500, 24400]
-XLSX_FILE = f"report/{SYMBOL}_options_data.xlsx"
+XLSX_FILE = f"report2/{SYMBOL}_options_data.xlsx"
 
 # Headers for HTTP request
 HEADERS = {
@@ -75,10 +75,9 @@ def update_xlsx(symbol, transformed_data, timestamp, underlying_value):
 
     if column_number is None:
         column_number = find_empty_column(ws)
-        initialize_sheet(ws, symbol, timestamp, column_number)
-
-    # Write transformed data
-    write_data_to_sheet(ws, transformed_data, column_number)
+        initialize_sheet(ws, symbol, transformed_data, timestamp, underlying_value, column_number)
+    else:
+        add_new_lastprice(ws, transformed_data, timestamp, underlying_value, column_number)
 
     # Adjust column widths based on content
     adjust_column_widths(ws)
@@ -92,7 +91,7 @@ def find_column_to_update(ws, timestamp):
     max_col = ws.max_column
     for col in range(2, max_col + 1):
         cell_value = ws.cell(row=4, column=col).value
-        if cell_value == f'DATE {timestamp.strftime("%d-%m-%Y %H:%M")}':
+        if cell_value == f'DATE {timestamp.strftime("%d-%m-%Y")}':
             return col
     return None
 
@@ -104,11 +103,12 @@ def find_empty_column(ws):
             return col
     return max_col + 1
 
-def initialize_sheet(ws, symbol, timestamp, column_number):
+def initialize_sheet(ws, symbol, transformed_data, timestamp, underlying_value, column_number):
     """Initialize the worksheet with headers and timestamp."""
+    print("=== CREATING NEW FILE ===")
     ws.cell(row=3, column=column_number).value = symbol
     ws.cell(row=3, column=column_number).font = Font(bold=True)
-    ws.cell(row=4, column=column_number).value = f'DATE {timestamp.strftime("%d-%m-%Y %H:%M")}'
+    ws.cell(row=4, column=column_number).value = f'DATE {timestamp.strftime("%d-%m-%Y")}'
     ws.cell(row=4, column=column_number).font = Font(bold=True)
 
     headers = ['Identifier', 'Strike Price / Type', timestamp.strftime('%H:%M')]
@@ -116,17 +116,46 @@ def initialize_sheet(ws, symbol, timestamp, column_number):
         ws.cell(row=5, column=column_number + i - 1).value = header
         ws.cell(row=5, column=column_number + i - 1).font = Font(bold=True)
         ws.cell(row=5, column=column_number + i - 1).alignment = Alignment(horizontal='center')
-    
-    ws.cell(row=15, column=column_number).value = "NIFTY"
 
-def write_data_to_sheet(ws, transformed_data, column_number):
-    """Write transformed data to the worksheet."""
     for i, data in enumerate(transformed_data, start=6):
         ws.cell(row=i, column=column_number).value = data['identifier']
         ws.cell(row=i, column=column_number + 1).value = f"{data['strikePrice']} {'CE' if 'CE' in data['identifier'] else 'PE'}"
         ws.cell(row=i, column=column_number + 2).value = data['lastPrice']
 
+    ws.cell(row=15, column=column_number).value = "NIFTY"
     ws.cell(row=15, column=column_number + 2).value = underlying_value
+
+def add_new_lastprice(ws, transformed_data, timestamp, underlying_value, column_number):
+    """Write transformed data to the worksheet."""
+    print("=== Updating saved file ===")
+    last_col_index, last_col_value = find_last_column(ws)
+
+    print(timestamp)
+    if last_col_value == timestamp.strftime('%H:%M'):
+        return
+
+    ws.cell(row=5, column=column_number + last_col_index - 1).value = timestamp.strftime('%H:%M')
+    ws.cell(row=5, column=column_number + last_col_index - 1).font = Font(bold=True)
+    ws.cell(row=5, column=column_number + last_col_index - 1).alignment = Alignment(horizontal='center')
+
+    # Write data rows starting from row 6
+    for i, data in enumerate(transformed_data, start=6):
+        ws.cell(row=i, column=column_number + last_col_index - 1).value = data['lastPrice']
+
+    ws.cell(row=15, column=column_number + last_col_index - 1).value = underlying_value
+
+def find_last_column(ws):
+    max_col = ws.max_column
+    last_col_index = None
+    last_col_value = None
+
+    for col in range(1, max_col + 1):
+        cell_value = ws.cell(row=5, column=col).value
+        if cell_value is not None:
+            last_col_index = col
+            last_col_value = cell_value
+
+    return last_col_index, last_col_value
 
 def adjust_column_widths(ws):
     """Adjust column widths based on content."""
