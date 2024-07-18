@@ -8,7 +8,7 @@ from sqlite_dumper import dump_data_to_sqlite, initialize_database
 # Constants
 SYMBOL = 'NIFTY'
 TARGET_STRIKE_PRICES = [24600, 24700, 24500, 24400]
-XLSX_FILE = f"report2/{SYMBOL}_options_data.xlsx"
+XLSX_FILE = f"report/{SYMBOL}_options_data.xlsx"
 
 # Headers for HTTP request
 HEADERS = {
