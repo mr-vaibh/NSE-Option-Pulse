@@ -7,7 +7,7 @@ from sqlite_dumper import dump_data_to_sqlite, initialize_database
 
 # Constants
 SYMBOL = 'NIFTY'
-TARGET_STRIKE_PRICES = [24600, 24700, 24500, 24400]
+TARGET_STRIKE_PRICES = [24200, 24300, 24400, 24500, 24600, 24700, 24700]
 XLSX_FILE = f"report/{SYMBOL}_options_data.xlsx"
 
 # Headers for HTTP request
@@ -122,8 +122,8 @@ def initialize_sheet(ws, symbol, transformed_data, timestamp, underlying_value, 
         ws.cell(row=i, column=column_number + 1).value = f"{data['strikePrice']} {'CE' if 'CE' in data['identifier'] else 'PE'}"
         ws.cell(row=i, column=column_number + 2).value = data['lastPrice']
 
-    ws.cell(row=15, column=column_number).value = "NIFTY"
-    ws.cell(row=15, column=column_number + 2).value = underlying_value
+    ws.cell(row=20, column=column_number).value = "NIFTY"
+    ws.cell(row=20, column=column_number + 2).value = underlying_value
 
 def add_new_lastprice(ws, transformed_data, timestamp, underlying_value, column_number):
     """Write transformed data to the worksheet."""
@@ -142,7 +142,7 @@ def add_new_lastprice(ws, transformed_data, timestamp, underlying_value, column_
     for i, data in enumerate(transformed_data, start=6):
         ws.cell(row=i, column=column_number + last_col_index - 1).value = data['lastPrice']
 
-    ws.cell(row=15, column=column_number + last_col_index - 1).value = underlying_value
+    ws.cell(row=20, column=column_number + last_col_index - 1).value = underlying_value
 
 def find_last_column(ws):
     max_col = ws.max_column
