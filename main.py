@@ -29,7 +29,7 @@ def send_http_request():
     response = session.get(url, headers=HEADERS)
     return response.json()
 
-def get_rectified_data(time_now):
+def get_rectified_data(time_now, skip_retry = False):
     print("\n=== Fetching data at", format_datetime(time_now) , "===")
     while True:
         data = send_http_request()
@@ -39,8 +39,11 @@ def get_rectified_data(time_now):
         # Calculate the time difference
         time_difference = time_now - last_timestamp
 
+        if args.init_now:
+            skip_retry = True
+
         # Check if the data is within the last minute
-        if time_difference <= timedelta(seconds=59):
+        if (skip_retry or time_difference <= timedelta(seconds=59)):
             print("Data found of", format_datetime(last_timestamp))
             print("Time difference:", time_difference)
             return data
@@ -54,14 +57,14 @@ def fetch_option_chain(symbol, target_strike_prices):
     time_now = datetime.now()
     data = get_rectified_data(time_now)
 
-    # Dump data to SQLite
-    dump_data_to_sqlite(data, symbol)
-
     # Extract relevant data
     all_data = data['filtered']['data']
     underlying_value = data['records']['underlyingValue']
     timestamp_str = data['records']['timestamp']
     timestamp = datetime.strptime(timestamp_str, '%d-%b-%Y %H:%M:%S')
+
+    # Dump data to SQLite
+    dump_data_to_sqlite(data, symbol, datetime.strftime(timestamp, '%Y-%m-%d %H:%M:%S'))
 
     # Filter data based on target_strike_prices
     filtered_options = [option for option in all_data if option.get("strikePrice") in target_strike_prices]
@@ -211,10 +214,11 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description="Run scheduled jobs for fetching and processing stock options data.")
     parser.add_argument('--init', '-i', action='store_true', help="Initialize the database and perform the initial fetch.")
+    parser.add_argument('--init-now', '-in', action='store_true', help="Initialize the database and perform the initial fetch immediately for current moment.")
     args = parser.parse_args()
     
-    # Initial fetch and write to Excel if --init or -i
-    if args.init:
+    # Initial fetch and write to Excel if -i/--init or -in/--init-now
+    if args.init or args.init_now:
         initialize_database()
         job()
 

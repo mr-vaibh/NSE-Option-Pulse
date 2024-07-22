@@ -13,25 +13,26 @@ def initialize_database():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             symbol TEXT NOT NULL,
             data TEXT NOT NULL,
-            timestamp TEXT NOT NULL
+            timestamp TEXT NOT NULL,
+            dumptime TEXT NOT NULL
         )
     ''')
     conn.commit()
     conn.close()
 
-def dump_data_to_sqlite(data, symbol):
+def dump_data_to_sqlite(data, symbol, timestamp):
     """Dump API data to the SQLite database."""
     conn = sqlite3.connect(DATABASE_FILE)
     cursor = conn.cursor()
-    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    
+    dumptime = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
     cursor.execute('''
-        INSERT INTO options_data (symbol, data, timestamp) VALUES (?, ?, ?)
-    ''', (symbol, json.dumps(data), timestamp))
+        INSERT INTO options_data (symbol, data, timestamp, dumptime) VALUES (?, ?, ?, ?)
+    ''', (symbol, json.dumps(data), timestamp, dumptime))
 
     conn.commit()
     conn.close()
-    print(f"Data successfully dumped to database at {timestamp}")
+    print(f"Data successfully dumped to database at {dumptime}")
 
 # Example usage
 if __name__ == '__main__':
@@ -45,4 +46,4 @@ if __name__ == '__main__':
         ],
         'timestamp': '16-Jul-2024 15:30:00'
     }
-    dump_data_to_sqlite(dummy_data, 'NIFTY')
+    dump_data_to_sqlite(dummy_data, 'NIFTY', '2024-07-16 15:30:00')
