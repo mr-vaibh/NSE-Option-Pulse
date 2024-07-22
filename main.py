@@ -1,6 +1,8 @@
 import requests
+import argparse
+import schedule
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 from openpyxl import load_workbook, Workbook
 from openpyxl.styles import Font, Alignment
 from sqlite_dumper import dump_data_to_sqlite, initialize_database
@@ -18,12 +20,39 @@ HEADERS = {
     "Connection": "keep-alive",
 }
 
-def fetch_option_chain(symbol, target_strike_prices):
-    """Fetch option chain data from NSE website."""
-    url = f"https://www.nseindia.com/api/option-chain-indices?symbol={symbol}"
+def format_datetime(time_obj, format = "%d-%b-%Y %H:%M:%S"):
+    return datetime.strftime(time_obj, format)
+
+def send_http_request():
+    url = f"https://www.nseindia.com/api/option-chain-indices?symbol={SYMBOL}"
     session = requests.Session()
     response = session.get(url, headers=HEADERS)
-    data = response.json()
+    return response.json()
+
+def get_rectified_data(time_now):
+    print("\n=== Fetching data at", format_datetime(time_now) , "===")
+    while True:
+        data = send_http_request()
+        last_timestamp_str = data['records']['timestamp']
+        last_timestamp = datetime.strptime(last_timestamp_str, '%d-%b-%Y %H:%M:%S')
+
+        # Calculate the time difference
+        time_difference = time_now - last_timestamp
+
+        # Check if the data is within the last minute
+        if time_difference <= timedelta(seconds=59):
+            print("Data found of", format_datetime(last_timestamp))
+            print("Time difference:", time_difference)
+            return data
+        else:
+            # Adjust the sleep time based on how often you want to check
+            print("Data found was old. Retrying in 10s ...")
+            time.sleep(10)
+
+def fetch_option_chain(symbol, target_strike_prices):
+    """Fetch option chain data from NSE website."""
+    time_now = datetime.now()
+    data = get_rectified_data(time_now)
 
     # Dump data to SQLite
     dump_data_to_sqlite(data, symbol)
@@ -105,7 +134,7 @@ def find_empty_column(ws):
 
 def initialize_sheet(ws, symbol, transformed_data, timestamp, underlying_value, column_number):
     """Initialize the worksheet with headers and timestamp."""
-    print("=== CREATING NEW FILE ===")
+    print("[CREATING NEW FILE]")
     ws.cell(row=3, column=column_number).value = symbol
     ws.cell(row=3, column=column_number).font = Font(bold=True)
     ws.cell(row=4, column=column_number).value = f'DATE {timestamp.strftime("%d-%m-%Y")}'
@@ -127,10 +156,9 @@ def initialize_sheet(ws, symbol, transformed_data, timestamp, underlying_value, 
 
 def add_new_lastprice(ws, transformed_data, timestamp, underlying_value, column_number):
     """Write transformed data to the worksheet."""
-    print("=== Updating saved file ===")
+    print("[Updating saved file]")
     last_col_index, last_col_value = find_last_column(ws)
 
-    print(timestamp)
     if last_col_value == timestamp.strftime('%H:%M'):
         return
 
@@ -173,17 +201,34 @@ def adjust_column_widths(ws):
         ws.column_dimensions[column].width = adjusted_width
 
 
-if __name__ == '__main__':
-    initialize_database()
-    
-    # Initial fetch and write to Excel
+def job():
     filtered_options, timestamp, underlying_value = fetch_option_chain(SYMBOL, TARGET_STRIKE_PRICES)
     transformed_data = transform_data(filtered_options)
     update_xlsx(SYMBOL, transformed_data, timestamp, underlying_value)
 
-    # Continuous update every 10 seconds
+if __name__ == '__main__':
+    initialize_database()
+
+    parser = argparse.ArgumentParser(description="Run scheduled jobs for fetching and processing stock options data.")
+    parser.add_argument('--init', '-i', action='store_true', help="Initialize the database and perform the initial fetch.")
+    args = parser.parse_args()
+    
+    # Initial fetch and write to Excel if --init or -i
+    if args.init:
+        initialize_database()
+        job()
+
+    # List of times to run the job
+    times = [
+        "09:15", "09:30", "10:00", "10:30", "11:00", "11:30", "12:00",
+        "12:30", "13:00", "13:30", "14:00", "14:30", "15:00", "15:35",
+    ]
+
+    # Schedule the job at the specified times
+    for time_str in times:
+        schedule.every().day.at(time_str + ":59").do(job)
+
+    # Keep the script running
     while True:
-        time.sleep(1800)
-        filtered_options, timestamp, underlying_value = fetch_option_chain(SYMBOL, TARGET_STRIKE_PRICES)
-        transformed_data = transform_data(filtered_options)
-        update_xlsx(SYMBOL, transformed_data, timestamp, underlying_value)
+        schedule.run_pending()
+        time.sleep(1)
