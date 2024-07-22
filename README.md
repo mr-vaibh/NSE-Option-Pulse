@@ -23,7 +23,7 @@ Ensure you have Python 3.x installed on your system.
 1. **Clone the Repository:**
 
     ```bash
-    git clone [https://github.com/mr-vaibh/NSE-Option-Pulse.git](https://github.com/mr-vaibh/NSE-Option-Pulse.git)
+    git clone https://github.com/mr-vaibh/NSE-Option-Pulse.git
     cd NSE-Option-Pulse
     ```
 
