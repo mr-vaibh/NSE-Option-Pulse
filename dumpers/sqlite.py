@@ -2,7 +2,7 @@ import sqlite3
 import json
 from datetime import datetime
 
-DATABASE_FILE = 'options_data.sqlite'
+DATABASE_FILE = 'options_data.sqlite3'
 
 def initialize_database():
     """Initialize the SQLite database with the necessary table."""

@@ -1,0 +1,8 @@
+{
+    "SYMBOL": "NIFTY",
+    "TARGET_STRIKE_PRICES": [24200, 24300, 24400, 24500, 24600, 24700, 24700],
+    "XLSX_DIR": "report/",
+    "G-SHEET-CREDENTIALS": "credentials.json",
+    "G-SHEET-NAME": "Option Trading data",
+    "G-SHEET-TITLE": "Time Data Test 2"
+}
