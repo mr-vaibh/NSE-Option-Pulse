@@ -14,6 +14,9 @@ def open_worksheet(gc, sheet_name, worksheet_title):
 def format_data(data, timestamp, symbol, underlying_value):
     """Format the data to be written to the spreadsheet."""
     rows = []
+    rows_ce = []
+    rows_pe = []
+
     rows.append([timestamp.strftime("%d-%m-%Y"), symbol, timestamp.strftime("%I:%M %p"), underlying_value])
 
     for item in data:
@@ -32,8 +35,13 @@ def format_data(data, timestamp, symbol, underlying_value):
             timestamp.strftime("%I:%M %p"),
             last_price
         ]
-        rows.append(formatted_row)
-    
+        if option_type == 'CE':
+            rows_ce.append(formatted_row)
+        elif option_type == 'PE':
+            rows_pe.append(formatted_row)
+
+    rows += rows_ce + rows_pe
+
     return rows
 
 def update_spreadsheet(worksheet, rows):
@@ -61,7 +69,7 @@ def needs_update(worksheet, last_time):
     column_c_values = worksheet.col_values(3)
     last_value_in_column_c = worksheet.cell(len(column_c_values), 3).value
 
-    return last_value_in_column_c != last_time
+    return last_value_in_column_c.lower() != last_time.lower()
 
 def save_to_spreadsheet(symbol, timestamp, underlying_value, transformed_data, credentials_filename, sheet_name, worksheet_title):
     """Main function to save data to Google Sheets."""

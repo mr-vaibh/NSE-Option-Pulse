@@ -23,6 +23,7 @@ def update_xlsx(filename, symbol, timestamp, underlying_value, transformed_data)
 
     if column_number is None:
         column_number = find_empty_column(ws)
+        kwargs['column_number'] = column_number
         initialize_sheet(ws, symbol, **kwargs)
     else:
         add_new_lastprice(ws, **kwargs)
