@@ -1,6 +1,12 @@
 # Created by https://www.toptal.com/developers/gitignore/api/python,database
 # Edit at https://www.toptal.com/developers/gitignore?templates=python,database
 
+### Project ###
+.archive/
+
+### Google Cloud ###
+credentials.json
+
 ### Database ###
 *.accdb
 *.db

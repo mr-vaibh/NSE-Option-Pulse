@@ -131,10 +131,7 @@ if __name__ == '__main__':
         job()
 
     # List of times to run the job
-    times = [
-        "09:15", "09:30", "10:00", "10:30", "11:00", "11:30", "12:00",
-        "12:30", "13:00", "13:30", "14:00", "14:30", "15:00", "15:35",
-    ]
+    times = config["SCHEDULED_TIMES"]
 
     # Schedule the job at the specified times
     for time_str in times:
