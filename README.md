@@ -1,81 +1,137 @@
-# NIFTY Options Pulse
+# NSE Option Pulse
 
 ## Overview
 
-The NIFTY Options Pulse is a Python-based tool designed to fetch, process, and store NIFTY options data. The data is retrieved from the NSE website, filtered based on specified strike prices, transformed, and then stored in both an SQLite database and an Excel file for easy analysis and record-keeping.
+NSE Option Pulse is a Python application designed to fetch, process, and store stock options data from the NSE India website. The data is retrieved from the NSE website, and filtered based on specified strike prices. It supports multiple data storage formats including SQLite, Google Sheets, and Excel. The application is scheduled to run at specific times to ensure data is up-to-date. The data can be further used to analyse the market precisely and come up with better trading strategies.
 
 ## Features
 
-- **Automated Data Fetching**: Periodically fetches options data from the NSE website.
-- **Data Transformation**: Transforms raw options data into a structured format.
-- **Excel Report Generation**: Creates and updates an Excel report with the latest options data.
-- **SQLite Database Storage**: Stores raw data in an SQLite database for historical analysis.
-- **Customizable Strike Prices**: Filter options data based on user-defined strike prices.
+- **Data Fetching**: Retrieves stock options data from the NSE India API.
+- **SQLite Storage**: Stores the fetched data in an SQLite database for historical tracking.
+- **Google Sheets Integration**: Updates Google Sheets with the latest data for easy access and sharing.
+- **Excel Export**: Exports data to an Excel file for offline analysis.
+- **Scheduling**: Runs the data fetching process at predefined intervals using a scheduling mechanism.
 
 ## Installation
 
-1. **Clone the repository**:
-    ```sh
-    git clone https://github.com/yourusername/nifty-options-tracker.git
-    cd nifty-options-tracker
+### Prerequisites
+
+Ensure you have Python 3.x installed on your system.
+
+### Setup
+
+1. **Clone the Repository:**
+
+    ```bash
+    git clone <repository-url>
+    cd <repository-folder>
     ```
 
-2. **Install required packages**:
-    ```sh
-    pip install requests openpyxl
+2. **Install Required Libraries:**
+
+    ```bash
+    pip install requests schedule gspread openpyxl
     ```
+
+3. **Google Sheets Credentials:**
+   - Go to [Google Cloud Console](https://console.cloud.google.com/).
+   - Create a new project or select an existing project.
+   - Enable the Google Sheets API.
+   - Create OAuth 2.0 credentials and download the `credentials.json` file.
+   - Place `credentials.json` in the project root directory.
+
+4. **Configure `config.json`:**
+   - Create a `config.json` file in the project root directory with the following structure:
+
+    ```json
+    {
+        "SYMBOL": "NIFTY",
+        "TARGET_STRIKE_PRICES": [24200, 24300, 24400, 24500, 24600, 24700],
+        "SCHEDULED_TIMES": [
+            "09:15", "09:30", "10:00", "10:30", "11:00", "11:30", "12:00",
+            "12:30", "13:00", "13:30", "14:00", "14:30", "15:00", "15:35"
+        ],
+        "XLSX_DIR": "report/",
+        "G-SHEET-CREDENTIALS": "credentials.json",
+        "G-SHEET-NAME": "NSE Option Trading",
+        "G-SHEET-TITLE": "Historical Data Collection"
+    }
+    ```
+
+    - **SYMBOL**: The stock symbol for which data will be fetched.
+    - **TARGET_STRIKE_PRICES**: List of target strike prices to filter the data.
+    - **SCHEDULED_TIMES**: List of times at which the data must be fetched and recorded.
+    - **XLSX_DIR**: Directory where Excel files will be saved.
+    - **G-SHEET-CREDENTIALS**: Path to your Google Sheets credentials file.
+    - **G-SHEET-NAME**: Name of the Google Sheets spreadsheet.
+    - **G-SHEET-TITLE**: Title of the worksheet within the Google Sheets spreadsheet.
+
+## How It Works
+
+### Main Components
+
+1. **`main.py`**: This is the main script that coordinates the data fetching, processing, and scheduling.
+    - **Configuration**: Reads settings from `config.json`.
+    - **Data Fetching**: Uses the NSE India API to retrieve stock options data.
+    - **Data Processing**: Filters and transforms data.
+    - **Storage**:
+        - **SQLite**: Stores the raw data in an SQLite database for historical records.
+        - **Google Sheets**: Updates a specified Google Sheets document with the processed data.
+        - **Excel**: Exports the data to an Excel file for offline use.
+    - **Scheduling**: Uses the `schedule` library to run data fetching at predefined times.
+
+2. **`read_config.py`**: Contains a function to read configuration settings from `config.json`.
+
+3. **`dumpers/gsheet.py`**: Handles Google Sheets operations.
+    - **Authentication**: Uses OAuth2 credentials to authenticate with Google Sheets.
+    - **Worksheet Operations**: Opens a specified worksheet and updates it with new data.
+    - **Data Formatting**: Formats the data to fit the structure of Google Sheets.
+    - **Update Check**: Ensures that data is only updated if necessary.
+
+4. **`dumpers/sqlite.py`**: Manages SQLite database operations.
+    - **Database Initialization**: Creates the necessary database table if it doesn't exist.
+    - **Data Dumping**: Inserts fetched data into the SQLite database.
+
+5. **`dumpers/xlsx.py`**: Manages Excel file operations.
+    - **Update/Create Excel File**: Updates an existing Excel file or creates a new one if it does not exist.
+    - **Column Management**: Determines where to place new data and adjusts columns accordingly.
+    - **Formatting**: Adjusts column widths and formats cells for readability.
+
+### Scheduling
+
+The `schedule` library is used to run the `job` function at specific times throughout the trading day. The times are specified in `main.py` and can be adjusted based on your needs.
 
 ## Usage
 
-1. **Configure Constants**:
-    In `main.py`, adjust the constants to suit your needs:
-    ```python
-    SYMBOL = 'NIFTY'
-    TARGET_STRIKE_PRICES = [24600, 24700, 24500, 24400]
-    XLSX_FILE = f"report/{SYMBOL}_options_data.xlsx"
+1. **Initial Setup:**
+   Run the following command to initialize the database and perform the initial data fetch:
+
+    ```bash
+    python main.py --init
     ```
 
-2. **Run the script**:
-    ```sh
+2. **Immediate Data Fetch:**
+   Run the following command to fetch data immediately and initialize the database:
+
+    ```bash
+    python main.py --init-now
+    ```
+
+3. **Automated Data Fetching:**
+   The script will run automatically at scheduled times if executed without the `--init` or `--init-now` arguments.
+
+   ```bash
     python main.py
     ```
 
-3. **Continuous Data Fetching**:
-    The script will automatically fetch and update data every 30 minutes.
+## Contributing
 
-## Files
+Contributions are welcome! Please open an issue or submit a pull request to improve the project.
 
-### `main.py`
+## License
 
-This is the main script that:
-- Fetches options data from the NSE website.
-- Dumps raw data to the SQLite database.
-- Transforms and updates the data in an Excel report.
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
-### `sqlite_dumper.py`
+## Contact
 
-This script handles:
-- Initializing the SQLite database.
-- Dumping raw API data into the SQLite database.
-
-## Excel Report Structure
-
-- **Headers**: The report includes headers like `Identifier`, `Strike Price / Type`, and timestamps for easy tracking of price changes.
-- **Strike Prices**: Options data is organized by strike prices and their corresponding call (CE) and put (PE) options.
-- **Underlying Value**: The NIFTY index value is recorded for reference.
-
-## Database
-
-The SQLite database (`options_data.sqlite`) stores raw JSON data fetched from the NSE website along with timestamps. This allows for historical data analysis and auditing.
-
-### Database Initialization
-
-```python
-initialize_database()
-```
-
-### Example Data Dump
-
-```python
-dump_data_to_sqlite(data, symbol)
-```
+For questions or feedback, please reach out to [me](mailto:shuklavaibhav336@gmail.com).
