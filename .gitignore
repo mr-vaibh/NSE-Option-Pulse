@@ -3,6 +3,7 @@
 
 ### Project ###
 .archive/
+report/
 
 ### Google Cloud ###
 credentials.json
