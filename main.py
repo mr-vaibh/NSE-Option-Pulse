@@ -32,7 +32,14 @@ def send_http_request(symbol):
 def get_rectified_data(symbol, time_now, skip_retry = False):
     print("\n=== Fetching data at", format_datetime(time_now) , "===")
     while True:
+        print("Trying at", datetime.now().strftime('%d-%m-%Y %H:%M:%S'))
         data = send_http_request(symbol)
+
+        # If data hasn't got published yet
+        if data == {}:
+            time.sleep(5)
+            continue
+
         last_timestamp_str = data['records']['timestamp']
         last_timestamp = datetime.strptime(last_timestamp_str, '%d-%b-%Y %H:%M:%S')
 
@@ -43,14 +50,14 @@ def get_rectified_data(symbol, time_now, skip_retry = False):
             skip_retry = True
 
         # Check if the data is within the last minute
-        if (skip_retry or time_difference <= timedelta(seconds=59)):
-            print("Data found of", format_datetime(last_timestamp))
+        if (skip_retry or time_difference.total_seconds() <= 59):
+            print(f"Data found fresh [{format_datetime(last_timestamp)}]")
             print("Time difference:", time_difference)
             return data
         else:
             # Adjust the sleep time based on how often you want to check
-            print("Data found was old. Retrying in 10s ...")
-            time.sleep(10)
+            print(f"Data found was old [{last_timestamp}]. Retrying in 15s ...")
+            time.sleep(15)
 
 def fetch_option_chain(symbol, target_strike_prices):
     """Fetch option chain data from NSE website."""
