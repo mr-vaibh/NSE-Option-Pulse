@@ -46,7 +46,10 @@ def get_rectified_data(symbol, time_now, skip_retry = False):
         # Calculate the time difference
         time_difference = time_now - last_timestamp
 
-        if args.init_now:
+        market_closed = format_datetime(last_timestamp, "%H:%M") == "15:30"
+
+        # Skip fetching fresh current minute data instead get what is available this moment
+        if args.init_now or market_closed:
             skip_retry = True
 
         # Check if the data is within the last minute
