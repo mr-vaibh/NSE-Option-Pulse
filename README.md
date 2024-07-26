@@ -2,7 +2,7 @@
 
 ## Overview
 
-NSE Option Pulse is a Python application designed to fetch, process, and store stock options data from the NSE India website. The data is retrieved from the NSE website, and filtered based on specified strike prices. It supports multiple data storage formats including SQLite, Google Sheets, and Excel. The application is scheduled to run at specific times to ensure data is up-to-date. The data can be further used to analyse the market precisely and come up with better trading strategies.
+NSE Option Pulse is a Python application designed to fetch, process, and store stock options data from the NSE India website. The data is retrieved from the NSE website and filtered based on specified strike prices. It supports multiple data storage formats including SQLite, Google Sheets, and Excel, and includes a Flask web interface to start and stop the script remotely. The application is scheduled to run at specific times to ensure data is up-to-date. The data can be further used to analyze the market precisely and develop better trading strategies.
 
 ## Features
 
