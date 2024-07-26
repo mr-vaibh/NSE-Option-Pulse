@@ -1,6 +1,7 @@
 from flask import Flask, jsonify, render_template
 import subprocess
 import os
+import sys
 import signal
 import atexit
 
@@ -50,7 +51,9 @@ def start_script():
     if read_pid() is not None:
         return jsonify({'status': 'Script is already running'}), 400
 
-    script_process = subprocess.Popen(['python', 'main.py'])
+    # Use the current Python executable to run the script
+    python_path = sys.executable
+    script_process = subprocess.Popen([python_path, 'main.py'])
     write_pid(script_process.pid)
     return jsonify({'status': 'Script started successfully', 'pid': script_process.pid}), 200
 
