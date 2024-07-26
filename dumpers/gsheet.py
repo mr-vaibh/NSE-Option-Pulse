@@ -2,7 +2,8 @@ import gspread
 
 def authenticate(credentials_filename='credentials.json'):
     """Authenticate with Google Sheets using OAuth2 credentials."""
-    gc = gspread.oauth(scopes=["https://www.googleapis.com/auth/spreadsheets"], credentials_filename=credentials_filename)
+    gc = gspread.service_account(scopes=["https://www.googleapis.com/auth/drive", "https://www.googleapis.com/auth/spreadsheets"], filename=credentials_filename)
+    print(gc.list_spreadsheet_files())
     return gc
 
 def open_worksheet(gc, sheet_name, worksheet_title):
