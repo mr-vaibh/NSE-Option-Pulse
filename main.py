@@ -2,6 +2,7 @@ import requests
 import argparse
 import schedule
 import time
+import atexit
 from datetime import datetime, timedelta
 
 from read_config import read_config
@@ -11,6 +12,9 @@ from dumpers.sqlite import dump_data_to_sqlite, initialize_database
 
 # Constants
 config = read_config('config.json')
+
+# On script termination
+atexit.register(lambda x: print("...Schedular Stopped...\n"))
 
 # Headers for HTTP request
 HEADERS = {
@@ -148,6 +152,7 @@ if __name__ == '__main__':
         schedule.every().day.at(time_str + ":59").do(job)
 
     # Keep the script running
+    print("...Schedular Started...\n")
     while True:
         schedule.run_pending()
         time.sleep(1)

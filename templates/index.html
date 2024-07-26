@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Script Control</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 50px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin: 10px;
+            cursor: pointer;
+        }
+        #pid {
+            font-size: 18px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Control Script</h1>
+    <form id="start-form">
+        <button type="button" onclick="startScript()">Start Script</button>
+    </form>
+    <form id="stop-form">
+        <button type="button" onclick="stopScript()">Stop Script</button>
+    </form>
+    <div id="pid">
+        {% if pid %}
+            Script is running with PID: {{ pid }}
+        {% else %}
+            No script is currently running.
+        {% endif %}
+    </div>
+    <script>
+        function startScript() {
+            fetch('/start', {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'Script is already running') {
+                    alert(data.status);
+                } else {
+                    document.getElementById('pid').innerText = `Script started successfully with PID: ${data.pid}`;
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function stopScript() {
+            fetch('/stop', {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'No script is running') {
+                    alert(data.status);
+                } else {
+                    document.getElementById('pid').innerText = 'No script is currently running.';
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    </script>
+</body>
+</html>
