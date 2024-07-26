@@ -4,6 +4,7 @@
 ### Project ###
 .archive/
 report/
+config.json
 
 ### Google Cloud ###
 credentials.json
