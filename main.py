@@ -14,7 +14,7 @@ from dumpers.sqlite import dump_data_to_sqlite, initialize_database
 config = read_config('config.json')
 
 # On script termination
-atexit.register(lambda x: print("...Schedular Stopped...\n"))
+atexit.register(lambda: print("...Schedular Stopped...\n"))
 
 # Headers for HTTP request
 HEADERS = {
@@ -37,11 +37,17 @@ def get_rectified_data(symbol, time_now, skip_retry = False):
     print("\n=== Fetching data at", format_datetime(time_now) , "===")
     while True:
         print("Trying at", datetime.now().strftime('%d-%m-%Y %H:%M:%S'))
-        data = send_http_request(symbol)
+        data = None
+        try:
+            data = send_http_request(symbol)
 
-        # If data hasn't got published yet
-        if data == {}:
-            time.sleep(5)
+            # If data hasn't got published yet
+            if not data:
+                print("DATA NOT ARRIVED YET")
+                time.sleep(5)
+                continue
+        except Exception as e:
+            print("Error occured in send http request:\n", e)
             continue
 
         last_timestamp_str = data['records']['timestamp']
