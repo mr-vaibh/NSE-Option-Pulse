@@ -46,7 +46,6 @@ Ensure you have Python 3.x installed on your system.
     ```json
     {
         "SYMBOL": "NIFTY",
-        "TARGET_STRIKE_PRICES": [24200, 24300, 24400, 24500, 24600, 24700],
         "SCHEDULED_TIMES": [
             "09:15", "09:30", "10:00", "10:30", "11:00", "11:30", "12:00",
             "12:30", "13:00", "13:30", "14:00", "14:30", "15:00", "15:35"
@@ -59,7 +58,6 @@ Ensure you have Python 3.x installed on your system.
     ```
 
     - **SYMBOL**: The stock symbol for which data will be fetched.
-    - **TARGET_STRIKE_PRICES**: List of target strike prices to filter the data.
     - **SCHEDULED_TIMES**: List of times at which the data must be fetched and recorded.
     - **XLSX_DIR**: Directory where Excel files will be saved.
     - **G-SHEET-CREDENTIALS**: Path to your Google Sheets credentials file.

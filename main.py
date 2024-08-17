@@ -113,10 +113,33 @@ def transform_data(filtered_options):
     return transformed_data
 
 
+def fetch_equity_nifty_nse_ltp():
+    url = "https://www.icicidirect.com/marketapi/market"
+    form_data = {"method": "GetEquityNiftySensex"}
+    
+    try:
+        response = requests.post(url, data=form_data)
+        response_json = response.json()
+        for entry in response_json['Data']['Table']:
+            if entry['INDEX_NAME'] == 'Nifty 50' and entry['EXCHANGE'] == 'NSE':
+                return entry['LTP']
+        return None
+    except (ValueError, KeyError, IndexError) as e:
+        print(f"Error: {e}")
+        return None
+
+def get_target_strike_prices():
+    nifty_ltp = fetch_equity_nifty_nse_ltp()
+    rounded = round(nifty_ltp / 100) * 100
+    greater_hundreds = [rounded + 100 * i for i in range(1, 4)]
+    lesser_hundreds = [rounded - 100 * i for i in range(1, 3)]
+    target_strike_prices = sorted([*lesser_hundreds, rounded, *greater_hundreds])
+    return target_strike_prices
+
 def job():
     symbol = config["SYMBOL"]
     xlsx_filename = config["XLSX_DIR"] + symbol + '_options_data.xlsx'
-    target_strike_prices = config["TARGET_STRIKE_PRICES"]
+    target_strike_prices = get_target_strike_prices()
     credentials_filename = config["G-SHEET-CREDENTIALS"]
     sheet_name = config["G-SHEET-NAME"]
     worksheet_title = config["G-SHEET-TITLE"]
